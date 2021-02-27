@@ -1,6 +1,14 @@
+
 .App {
+  height: 100vh;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: bottom center;
+
   text-align: center;
+
 }
+
 
 .App-logo {
   height: 40vmin;
@@ -15,11 +23,13 @@
 
 .App-header {
   background-color: #282c34;
-  min-height: 100vh;
+  /* max-height: 10vh; */
+  min-height: 10vh;
   display: flex;
-  flex-direction: column;
+  /* flex-direction: column; */
   align-items: center;
   justify-content: center;
+  text-align: center;
   font-size: calc(10px + 2vmin);
   color: white;
 }
@@ -35,4 +45,26 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* custom */
+
+.custom-border {
+  border: .1em;
+  border-color: black;
+  border-style: solid;
+}
+
+.controllerMainView {
+min-height: 50vh;
+/* min-height: 40vh; */
+}
+
+.historicalData {
+  /* min-height: 10vh; */
+  min-height: 40vh;
+}
+
+.concentrationRange {
+  color: red;
 }
