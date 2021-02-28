@@ -31,7 +31,7 @@ function App() {
 
   const [currentTempDisplay, setCurrentTempDisplay] = useState(currentData.temp)
 
-
+  const [currentOnScreenInput, setCurrentOnScreenInput] = useState({})
   //Date Time Setup
   // const timeElapsed = Date.now();
   // const today = new Date(timeElapsed).toTimeString;
@@ -188,13 +188,13 @@ function App() {
   //temperature styling base on concentration range
   const temperatureStatus = () => {
 
-    if (temperatureDisplay !== currentData.temp) {
+    if (currentTempDisplay !== currentData.temp) {
 
-      temperatureDisplay = currentData.temp;
+      currentTempDisplay = currentData.temp;
 
     }
 
-    if (temperatureDisplay > currentData.tempLimit.upper || temperatureDisplay < currentData.tempLimit.lower) {
+    if (currentTempDisplay > currentData.tempLimit.upper || currentTempDisplay < currentData.tempLimit.lower) {
 
       document.getElementById("temperatureDisplayId").style.color = "red";
 
@@ -219,6 +219,7 @@ function App() {
 
   }
 
+  //Select Options for Celcius or Farenheiht
   const handleOptionChange = () => {
 
     let stateToChange = { ...currentTempScale }
@@ -227,6 +228,39 @@ function App() {
 
   }
 
+  const getInputOnScreen = (evt) => {
+    debugger
+    let inputValue = evt.target.value;
+    let inputId = evt.target.id;
+    setCurrentOnScreenInput({ "value": inputValue, "inputId": inputId })
+    document.getElementById('code').value = evt.target.value;
+
+  }
+
+  const postInputOnScreen = (value) => {
+
+    let stateToChange = { ...currentData };
+
+
+    const targetId = currentOnScreenInput.inputId
+
+
+    const typeId = targetId.split("_")[0];
+
+    const limitId = targetId.split("_")[1];
+
+    stateToChange[typeId][limitId] = parseInt(value);
+
+    setCurrentData(stateToChange);
+    document.getElementById(targetId).value = value
+
+  }
+
+  useEffect(() => {
+
+    temperatureScale();
+
+  }, [currentTempScale]);
 
   useEffect(() => {
 
@@ -237,11 +271,6 @@ function App() {
   }, [currentData]);
 
 
-  useEffect(() => {
-
-    temperatureScale();
-
-  }, [currentTempScale]);
 
 
 
@@ -334,24 +363,24 @@ function App() {
               </div>
               <div className="btn-group">
 
-                <button type="button" className="btn btn-outline-secondary py-3" onclick="document.getElementById('code').value=document.getElementById('code').value + '1';">1</button>
-                <button type="button" className="btn btn-outline-secondary py-3" onclick="document.getElementById('code').value=document.getElementById('code').value + '2';">2</button>
-                <button type="button" className="btn btn-outline-secondary py-3" onclick="document.getElementById('code').value=document.getElementById('code').value + '3';">3</button>
+                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 1 }}>1</button>
+                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 2 }}>2</button>
+                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 3 }}>3</button>
               </div>
               <div className="btn-group">
-                <button type="button" className="btn btn-outline-secondary py-3" onclick="document.getElementById('code').value=document.getElementById('code').value + '4';">4</button>
-                <button type="button" className="btn btn-outline-secondary py-3" onclick="document.getElementById('code').value=document.getElementById('code').value + '5';">5</button>
-                <button type="button" className="btn btn-outline-secondary py-3" onclick="document.getElementById('code').value=document.getElementById('code').value + '6';">6</button>
+                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 4 }}>4</button>
+                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 5 }}>5</button>
+                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 6 }}>6</button>
               </div>
               <div className="btn-group">
-                <button type="button" className="btn btn-outline-secondary py-3" onclick="document.getElementById('code').value=document.getElementById('code').value + '7';">7</button>
-                <button type="button" className="btn btn-outline-secondary py-3" onclick="document.getElementById('code').value=document.getElementById('code').value + '8';">8</button>
-                <button type="button" className="btn btn-outline-secondary py-3" onclick="document.getElementById('code').value=document.getElementById('code').value + '9';">9</button>
+                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 7 }}>7</button>
+                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 8 }}>8</button>
+                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 9 }}>9</button>
               </div>
               <div className="btn-group">
-                <button type="button" className="btn btn-outline-secondary py-3" onclick="document.getElementById('code').value=document.getElementById('code').value.slice(0, -1);">&lt;</button>
-                <button type="button" className="btn btn-outline-secondary py-3" onclick="document.getElementById('code').value=document.getElementById('code').value + '0';">0</button>
-                <button type="button" className="btn btn-primary py-3" onclick="">Go</button>
+                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value.slice(0, -1) }}>&lt;</button>
+                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 0 }}>0</button>
+                <button type="button" className="btn btn-primary py-3" onClick={(evt) => postInputOnScreen(document.getElementById('code').value)}> Go</button>
               </div>
             </div>
 
@@ -363,28 +392,28 @@ function App() {
                 <InputGroup.Prepend>
                   <InputGroup.Text>Concentration (+)</InputGroup.Text>
                 </InputGroup.Prepend>
-                <FormControl id="concLimit_upper" aria-label="Small" defaultValue={currentData.concLimit.upper} onChange={handleFieldChange} aria-describedby="inputGroup-sizing-sm" />
+                <FormControl id="concLimit_upper" aria-label="Small" defaultValue={currentData.concLimit.upper} onChange={handleFieldChange} onClick={(evt) => getInputOnScreen(evt)} aria-describedby="inputGroup-sizing-sm" />
               </InputGroup>
               <br />
               <InputGroup size="sm">
                 <InputGroup.Prepend>
                   <InputGroup.Text>Concentration (-)</InputGroup.Text>
                 </InputGroup.Prepend>
-                <FormControl id="concLimit_lower" aria-label="Small" defaultValue={currentData.concLimit.lower} onChange={handleFieldChange} aria-describedby="inputGroup-sizing-sm" />
+                <FormControl id="concLimit_lower" aria-label="Small" defaultValue={currentData.concLimit.lower} onChange={handleFieldChange} onClick={(evt) => getInputOnScreen(evt)} aria-describedby="inputGroup-sizing-sm" />
               </InputGroup>
               <br />
               <InputGroup size="sm">
                 <InputGroup.Prepend>
                   <InputGroup.Text>Temperature (+)</InputGroup.Text>
                 </InputGroup.Prepend>
-                <FormControl id="tempLimit_upper" aria-label="Small" defaultValue={currentData.tempLimit.upper} onChange={handleFieldChange} aria-describedby="inputGroup-sizing-sm" />
+                <FormControl id="tempLimit_upper" aria-label="Small" defaultValue={currentData.tempLimit.upper} onChange={handleFieldChange} onClick={(evt) => getInputOnScreen(evt)} aria-describedby="inputGroup-sizing-sm" />
               </InputGroup>
               <br />
               <InputGroup size="sm">
                 <InputGroup.Prepend>
                   <InputGroup.Text>Temperature (-)</InputGroup.Text>
                 </InputGroup.Prepend>
-                <FormControl id="tempLimit_lower" aria-label="Small" defaultValue={currentData.tempLimit.lower} onChange={handleFieldChange} aria-describedby="inputGroup-sizing-sm" />
+                <FormControl id="tempLimit_lower" aria-label="Small" defaultValue={currentData.tempLimit.lower} onChange={handleFieldChange} onClick={(evt) => getInputOnScreen(evt)} aria-describedby="inputGroup-sizing-sm" />
               </InputGroup>
               <br />
             </div>
