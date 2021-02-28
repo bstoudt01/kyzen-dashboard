@@ -65,6 +65,10 @@ min-height: 50vh;
   min-height: 40vh;
 }
 
-.concentrationRange {
-  color: red;
+#concentrationDisplayId {
+  font-size: 20vh;
+}
+
+#temperatureDisplayId {
+  font-size: 10vh;
 }
