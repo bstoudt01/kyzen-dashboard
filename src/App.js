@@ -9,9 +9,8 @@ import Table from 'react-bootstrap/Table';
 import Image from 'react-bootstrap/Image';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
-import NumPad from 'react-numpad';
-import React, { useState, useEffect } from 'react'
-
+import React, { useState, useEffect } from 'react';
+// import numpad from './components/numpad.js';
 function App() {
 
   //Data on the GUI
@@ -28,8 +27,9 @@ function App() {
     }
   });
 
-  const [currentRange, setCurrentRange] = useState({})
+  const [currentTempScale, setCurrentTempScale] = useState(false)
 
+  const [currentTempDisplay, setCurrentTempDisplay] = useState(currentData.temp)
 
 
   //Date Time Setup
@@ -97,19 +97,19 @@ function App() {
     }
   ]
 
+  // const handleNumpad = (evt) => {
+  //   numpad.numpad.attach(evt)
+
+  // }
 
   //Concentration +/- field changes
   const handleFieldChange = (evt) => {
-
     //previous state
     let stateToChange = { ...currentData };
-
     //"concLimit_upper"
     const targetId = evt.target.id;
-
     //"concLimit" / "tempLimit"
     const typeId = targetId.split("_")[0];
-
     //"upper" / "lower"
     const limitId = targetId.split("_")[1];
 
@@ -118,72 +118,86 @@ function App() {
     setCurrentData(stateToChange);
 
     concentrationStatus();
-
   };
 
+  //reasign +/- based on range limit that was condition was not met
+  const concentrationRange = () => {
 
-  const rangeValue = () => {
+    if (concentrationRangeValue < 0) {
 
-    if (concentrationRange < 0) {
-      return `+ ${Math.abs(concentrationRange)}`
+      return `+ ${Math.abs(concentrationRangeValue)}`
     }
-    else if (concentrationRangeLower < 0) {
+
+    else if (concentrationRangeValueLower < 0) {
+
       return "inSpec"
     }
+
     else {
-      return `- ${Math.abs(concentrationRangeLower)}`
+
+      return `- ${Math.abs(concentrationRangeValueLower)}`
+    }
+  }
+
+
+  const temperatureRange = () => {
+
+    if (temperatureRangeValue < 0) {
+
+      return `+ ${Math.abs(temperatureRangeValue)}`
+    }
+
+    else if (temperatureRangeValueLower < 0) {
+
+      return "inSpec"
+    }
+
+    else {
+
+      return `- ${Math.abs(temperatureRangeValueLower)}`
     }
   }
 
   //
   const concentrationDisplay = currentData.conc;
   const temperatureDisplay = currentData.temp;
-  let concentrationRange = (currentData.concLimit.upper - concentrationDisplay);
-  let concentrationRangeLower = (currentData.concLimit.lower - concentrationDisplay)
-  //concentration styling based on under/over
+  let concentrationRangeValue = (currentData.concLimit.upper - concentrationDisplay);
+  let concentrationRangeValueLower = (currentData.concLimit.lower - concentrationDisplay);
+
+  let temperatureRangeValue = (currentData.tempLimit.upper - temperatureDisplay);
+  let temperatureRangeValueLower = (currentData.tempLimit.lower - temperatureDisplay);
+
+  //concentration styling based on concentration range
   const concentrationStatus = () => {
 
     if (concentrationDisplay !== currentData.conc) {
 
-      concentrationDisplay = currentData.conc
+      concentrationDisplay = currentData.conc;
     }
 
     if (concentrationDisplay > currentData.concLimit.upper || concentrationDisplay < currentData.concLimit.lower) {
 
       document.getElementById("concentrationDisplayId").style.color = "red";
-
-
-
-
-      // let upperRange = (concentrationDisplay - currentData.concLimit.upper)
-
-      // let lowerRange = (currentData.concLimit.lower - concentrationDisplay)
-
-      // if (upperRange > 0 || upperRange < 0) {
-
-      //   concentrationRange = upperRange
-      // }
-
-      // else if (lowerRange > 0 || lowerRange < 0) {
-
-      //   concentrationRange = `"+" ${lowerRange}`
-      // }
     }
     else {
 
       document.getElementById("concentrationDisplayId").style.color = "black";
-
     }
-
-    // setup going back to black from red
   };
 
+  //temperature styling base on concentration range
   const temperatureStatus = () => {
+
     if (temperatureDisplay !== currentData.temp) {
-      temperatureDisplay = currentData.temp
+
+      temperatureDisplay = currentData.temp;
+
     }
+
     if (temperatureDisplay > currentData.tempLimit.upper || temperatureDisplay < currentData.tempLimit.lower) {
+
       document.getElementById("temperatureDisplayId").style.color = "red";
+
     }
     else {
 
@@ -193,14 +207,59 @@ function App() {
   };
 
 
+  //temperature C to F
+  const temperatureScale = () => {
+
+    const tempF = (currentData.temp * 1.8) + 32;
+    if (currentTempScale === true) {
+      setCurrentTempDisplay(tempF)
+    } else
+      setCurrentTempDisplay(temperatureDisplay)
+    // currentTempScale ? setCurrentTempDisplay(tempF) : setCurrentTempDisplay(temperatureDisplay);
+
+  }
+
+  const handleOptionChange = () => {
+
+    let stateToChange = { ...currentTempScale }
+    stateToChange = !currentTempScale;
+    setCurrentTempScale(stateToChange);
+
+  }
+
+
   useEffect(() => {
+
     temperatureStatus();
+
     concentrationStatus();
+
   }, [currentData]);
 
 
+  useEffect(() => {
+
+    temperatureScale();
+
+  }, [currentTempScale]);
+
+
+
+  // window.addEventListener("load", function () {
+  //   // BASIC
+  //   numpad.attach({ target: "concLimit_upper" });
+  //   // WITH OPTIONS
+  //   // numpad.attach({
+  //   //   target: "demoB",
+  //   //   max: 10, // 10 DIGITS
+  //   //   decimal: false
+  //   // });
+  // });
+
   return (
     <>
+      {/* <link rel="stylesheet" href="numpad-dark.css" />
+      <script src="numpad.js"></script> */}
       <Container className="App" fluid>
 
         {/* Header */}
@@ -214,20 +273,27 @@ function App() {
           <Col xs={2}>Right Header</Col>
         </Row>
 
-        {/* Focus */}
+        {/*Current Data User View */}
         <Row className=" custom-border">
+
+          {/* Concentration Range */}
           <Col sm={3} className="controllerMainView">
             <p>Concentration +/-</p>
-            <p>{rangeValue()}</p>
+            <p>{concentrationRange()}</p>
           </Col>
+
+          {/* Current Concentration */}
           <Col sm={6} className="custom-border">
             <h1>Current Concentration</h1>
             <p id="concentrationDisplayId"> {concentrationDisplay}</p>
           </Col>
+
+          {/* Current Temperature & Range */}
           <Col sm={3} className="custom-border">
             <h4>Current Temperature</h4>
-            <p id="temperatureDisplayId">{temperatureDisplay}</p>
+            <p id="temperatureDisplayId">{currentTempDisplay}</p>
             <p>Temperature +/-</p>
+            <p>{temperatureRange()}</p>
           </Col>
         </Row>
 
@@ -288,6 +354,8 @@ function App() {
                 <button type="button" className="btn btn-primary py-3" onclick="">Go</button>
               </div>
             </div>
+
+
           </Col>
           <Col sm={3} className="custom-border">
             <div>
@@ -320,8 +388,49 @@ function App() {
               </InputGroup>
               <br />
             </div>
+            <div className="container">
+              <div className="row mt-5">
+                <div className="col-sm-12">
+
+                  <form>
+
+                    <div className="form-check">
+                      <label>
+                        <input
+                          type="radio"
+                          name="react-tips"
+                          value="c"
+                          checked={currentTempScale === false}
+                          className="form-check-input"
+                          onChange={handleOptionChange}
+                        />
+            Celcius
+          </label>
+                    </div>
+
+                    <div className="form-check">
+                      <label>
+                        <input
+                          type="radio"
+                          name="react-tips"
+                          value="f"
+                          className="form-check-input"
+                          checked={currentTempScale === true}
+                          onChange={handleOptionChange}
+
+                        />
+            Fahrenheit
+          </label>
+                    </div>
+
+                  </form>
+
+                </div>
+              </div>
+            </div>
           </Col>
         </Row>
+
 
       </Container>
 
