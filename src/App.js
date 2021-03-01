@@ -1,19 +1,17 @@
-import logo from './logo.svg';
 import './App.css';
-import Card from 'react-bootstrap/Card';
-import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Table from 'react-bootstrap/Table';
-import Image from 'react-bootstrap/Image';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import React, { useState, useEffect } from 'react';
+import Header from './components/Header';
+// import DataView from './components/DataView';
 // import numpad from './components/numpad.js';
 function App() {
 
-  //Data on the GUI
+  //Example data set used for inital view
   const [currentData, setCurrentData] = useState({
     conc: 52,
     temp: 38,
@@ -27,45 +25,34 @@ function App() {
     }
   });
 
+  //Temperature Scale boolean-state Celcius / Fahrenheit
   const [currentTempScale, setCurrentTempScale] = useState(false)
 
+  //Temperature Display
   const [currentTempDisplay, setCurrentTempDisplay] = useState(currentData.temp)
 
+  //selected input to be changed includes id and value
   const [currentOnScreenInput, setCurrentOnScreenInput] = useState({})
-  //Date Time Setup
-  // const timeElapsed = Date.now();
-  // const today = new Date(timeElapsed).toTimeString;
 
-  // predefined data points
-  const dataSet = [
-    {
-      conc: 15,
-      temp: 38,
-      tempLimit: {
-        upper: 75,
-        lower: 35
-      },
-      concLimit: {
-        upper: 20,
-        lower: 10
-      }
+  //state to hold onto historical data
+  // const [currentDataLog, setCurrentDataLog] = useState([{
+  //   conc: "",
+  //   temp: "",
+  //   tempLimit: {
+  //     upper: "",
+  //     lower: ""
+  //   },
+  //   concLimit: {
+  //     upper: "",
+  //     lower: ""
+  //   },
+  //   time: Date.now(),
+  //   tempScale: ""
+  // }])
 
-    },
-    {
-      conc: 16,
-      temp: 39,
-      tempLimit: {
-        upper: 75,
-        lower: 35
-      },
-      concLimit: {
-        upper: 20,
-        lower: 10
-      }
 
-    }
-  ]
-  //template for data being recorded for historical
+
+  //template array for historical data to be charted
   const dataSetLog = [
     {
       conc: 15,
@@ -78,8 +65,7 @@ function App() {
         upper: 20,
         lower: 10
       },
-      time: Date.now()
-
+      time: Date.now(),
     },
     {
       conc: 16,
@@ -92,35 +78,69 @@ function App() {
         upper: 20,
         lower: 10
       },
-      time: Date.now()
-
+      time: Date.now(),
     }
   ]
 
-  // const handleNumpad = (evt) => {
-  //   numpad.numpad.attach(evt)
+  //main display values
+  let concentrationDisplay = currentData.conc;
+  let temperatureDisplay = currentData.temp;
 
-  // }
+  //limit ranges
+  let concentrationRangeValue = (currentData.concLimit.upper - concentrationDisplay);
+  let concentrationRangeValueLower = (currentData.concLimit.lower - concentrationDisplay);
+  let temperatureRangeValue = (currentData.tempLimit.upper - temperatureDisplay);
+  let temperatureRangeValueLower = (currentData.tempLimit.lower - temperatureDisplay);
 
-  //Concentration +/- field changes
+  //Concentration and Temperature input field changes
+  //direct manipulation only, this is not for the onscreen numpad input
   const handleFieldChange = (evt) => {
+
+    //test if value string contains only numbers
+    let isnum = /^\d+$/.test(evt.target.value);
+
     //previous state
     let stateToChange = { ...currentData };
+
     //"concLimit_upper"
     const targetId = evt.target.id;
+
     //"concLimit" / "tempLimit"
     const typeId = targetId.split("_")[0];
+
     //"upper" / "lower"
     const limitId = targetId.split("_")[1];
 
-    stateToChange[typeId][limitId] = parseInt(evt.target.value);
+    //alert if not all chars were digits
+    if (isnum === false) {
 
-    setCurrentData(stateToChange);
+      alert("Numbers Only, Try Again.");
+    }
 
-    concentrationStatus();
+    //alert if upper limit is set below lower
+    else if (limitId === "upper" && evt.target.value < currentData[typeId].lower) {
+
+      alert(`This limit must be set above ${currentData[typeId].lower}... reset the lower limit first`)
+    }
+
+    //alert if lower limit is set above upper
+    else if (limitId === "lower" && evt.target.value > currentData[typeId].lower) {
+
+      alert(`This limit must be set below ${currentData[typeId].upper}... reset the upper limit first`)
+    }
+
+    else {
+
+      //update currentData to include the newly defined limit
+      stateToChange[typeId][limitId] = parseInt(evt.target.value);
+
+      setCurrentData(stateToChange);
+
+      concentrationStatus();
+    }
   };
 
-  //reasign +/- based on range limit that was condition was not met
+  //reasign concentration range value based on if a range-limit condition was not met
   const concentrationRange = () => {
 
     if (concentrationRangeValue < 0) {
@@ -130,7 +150,7 @@ function App() {
 
     else if (concentrationRangeValueLower < 0) {
 
-      return "inSpec"
+      return "In Spec"
     }
 
     else {
@@ -139,7 +159,7 @@ function App() {
     }
   }
 
-
+  //reasign temperature range value based on if a range-limit condition was not met
   const temperatureRange = () => {
 
     if (temperatureRangeValue < 0) {
@@ -149,7 +169,7 @@ function App() {
 
     else if (temperatureRangeValueLower < 0) {
 
-      return "inSpec"
+      return "In Spec"
     }
 
     else {
@@ -157,15 +177,6 @@ function App() {
       return `- ${Math.abs(temperatureRangeValueLower)}`
     }
   }
-
-  //
-  const concentrationDisplay = currentData.conc;
-  const temperatureDisplay = currentData.temp;
-  let concentrationRangeValue = (currentData.concLimit.upper - concentrationDisplay);
-  let concentrationRangeValueLower = (currentData.concLimit.lower - concentrationDisplay);
-
-  let temperatureRangeValue = (currentData.tempLimit.upper - temperatureDisplay);
-  let temperatureRangeValueLower = (currentData.tempLimit.lower - temperatureDisplay);
 
   //concentration styling based on concentration range
   const concentrationStatus = () => {
@@ -178,10 +189,15 @@ function App() {
     if (concentrationDisplay > currentData.concLimit.upper || concentrationDisplay < currentData.concLimit.lower) {
 
       document.getElementById("concentrationDisplayId").style.color = "red";
+
+      document.getElementById("concentrationRangeId").style.color = "red";
     }
+
     else {
 
       document.getElementById("concentrationDisplayId").style.color = "black";
+
+      document.getElementById("concentrationRangeId").style.color = "black";
     }
   };
 
@@ -191,69 +207,122 @@ function App() {
     if (currentTempDisplay !== currentData.temp) {
 
       currentTempDisplay = currentData.temp;
-
     }
 
     if (currentTempDisplay > currentData.tempLimit.upper || currentTempDisplay < currentData.tempLimit.lower) {
 
       document.getElementById("temperatureDisplayId").style.color = "red";
 
+      document.getElementById("temperatureRangeId").style.color = "red";
     }
+
     else {
 
       document.getElementById("temperatureDisplayId").style.color = "black";
 
+      document.getElementById("temperatureRangeId").style.color = "black";
     }
   };
 
 
-  //temperature C to F
+  //temperature display adjustment C to F
   const temperatureScale = () => {
 
     const tempF = (currentData.temp * 1.8) + 32;
-    if (currentTempScale === true) {
-      setCurrentTempDisplay(tempF)
-    } else
-      setCurrentTempDisplay(temperatureDisplay)
-    // currentTempScale ? setCurrentTempDisplay(tempF) : setCurrentTempDisplay(temperatureDisplay);
 
+    if (currentTempScale === true) {
+
+      setCurrentTempDisplay(tempF)
+
+    } else {
+
+      setCurrentTempDisplay(temperatureDisplay)
+    }
   }
 
   //Select Options for Celcius or Farenheiht
   const handleOptionChange = () => {
 
     let stateToChange = { ...currentTempScale }
+
     stateToChange = !currentTempScale;
+
     setCurrentTempScale(stateToChange);
 
   }
 
+  //Select limiting input to be changed via the onScreen numpad
   const getInputOnScreen = (evt) => {
-    debugger
+
     let inputValue = evt.target.value;
+
     let inputId = evt.target.id;
+
+    //place input value and id into state
     setCurrentOnScreenInput({ "value": inputValue, "inputId": inputId })
+
+    //place input value into numpad input field
     document.getElementById('code').value = evt.target.value;
 
   }
 
+  //Submit limiting input to be changed from the onScreeen numpad
   const postInputOnScreen = (value) => {
+
+    let isnum = /^\d+$/.test(value);
 
     let stateToChange = { ...currentData };
 
-
     const targetId = currentOnScreenInput.inputId
-
 
     const typeId = targetId.split("_")[0];
 
     const limitId = targetId.split("_")[1];
 
-    stateToChange[typeId][limitId] = parseInt(value);
+    if (isnum === false) {
 
-    setCurrentData(stateToChange);
-    document.getElementById(targetId).value = value
+      alert("Numbers Only, Try Again.");
 
+      document.getElementById('code').value = "";
+
+      setCurrentOnScreenInput({});
+    }
+
+    //alert if upper limit is set below lower
+    else if (limitId === "upper" && value < currentData[typeId].lower) {
+
+      alert(`This limit must be set above ${currentData[typeId].lower}... reset the lower limit first`)
+
+      //clear numpad input and temp state
+      document.getElementById('code').value = "";
+
+      setCurrentOnScreenInput({});
+    }
+
+    //alert if upper limit is set below lower
+    else if (limitId === "lower" && value > currentData[typeId].upper) {
+
+      alert(`This limit must be set below ${currentData[typeId].upper}... reset the upper limit first`)
+
+      document.getElementById('code').value = "";
+
+      setCurrentOnScreenInput({})
+    }
+    else {
+
+      //update state with new value submited
+      stateToChange[typeId][limitId] = parseInt(value);
+
+      setCurrentData(stateToChange);
+
+      //move new number to limit input field
+      //should probbably be reset by the state change above, but it wasnt refreshing
+      document.getElementById(targetId).value = value;
+
+      document.getElementById('code').value = "";
+
+      setCurrentOnScreenInput({})
+    }
   }
 
   useEffect(() => {
@@ -270,45 +339,21 @@ function App() {
 
   }, [currentData]);
 
-
-
-
-
-  // window.addEventListener("load", function () {
-  //   // BASIC
-  //   numpad.attach({ target: "concLimit_upper" });
-  //   // WITH OPTIONS
-  //   // numpad.attach({
-  //   //   target: "demoB",
-  //   //   max: 10, // 10 DIGITS
-  //   //   decimal: false
-  //   // });
-  // });
-
   return (
     <>
-      {/* <link rel="stylesheet" href="numpad-dark.css" />
-      <script src="numpad.js"></script> */}
       <Container className="App" fluid>
 
-        {/* Header */}
-        <Row className="App-header">
-          <Col xs={2}>
-            <Image src="./logo.jpg" alt="Kyzen Logo" />
-            {/* <Image src={require(logo)} alt="Kyzen Logo" /> */}
-
-          </Col>
-          <Col xs={8}>AQUANOX A4651US</Col>
-          <Col xs={2}>Right Header</Col>
-        </Row>
+        <Header />
 
         {/*Current Data User View */}
         <Row className=" custom-border">
 
-          {/* Concentration Range */}
+          {/* Current Concentration Range */}
           <Col sm={3} className="controllerMainView">
+            <h4>Current Concentration</h4>
+
             <p>Concentration +/-</p>
-            <p>{concentrationRange()}</p>
+            <p id="concentrationRangeId">{concentrationRange()}</p>
           </Col>
 
           {/* Current Concentration */}
@@ -322,12 +367,13 @@ function App() {
             <h4>Current Temperature</h4>
             <p id="temperatureDisplayId">{currentTempDisplay}</p>
             <p>Temperature +/-</p>
-            <p>{temperatureRange()}</p>
+            <p id="temperatureRangeId">{temperatureRange()}</p>
           </Col>
         </Row>
 
         {/* Controls and Log */}
         <Row>
+          {/* Historical Data Log */}
           <Col sm={6} className="custom-border historicalData">
             <h2>Historical Data</h2>
             <Table striped bordered hover size="sm">
@@ -335,8 +381,7 @@ function App() {
                 <tr>
                   <th>Concentration</th>
                   <th>Temperature</th>
-                  <th>ADDON: Timestamp? Ref Point</th>
-                  <th>+Set Uppers & Lowers</th>
+                  <th>Timestamp</th>
                 </tr>
               </thead>
               <tbody>
@@ -344,17 +389,17 @@ function App() {
                   <td>{dataSetLog[0].conc}</td>
                   <td>{dataSetLog[0].temp}</td>
                   <td>{dataSetLog[0].time}</td>
-                  <td>@mdo</td>
                 </tr>
                 <tr>
                   <td>{dataSetLog[1].conc}</td>
                   <td>{dataSetLog[1].temp}</td>
                   <td>{dataSetLog[1].time}</td>
-                  <td>@fat</td>
                 </tr>
               </tbody>
             </Table>
           </Col>
+
+          {/* numpad */}
           <Col sm={3} className="custom-border">
 
             <div className="btn-group-vertical ml-4 mt-4" role="group" aria-label="Basic example">
@@ -363,29 +408,29 @@ function App() {
               </div>
               <div className="btn-group">
 
-                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 1 }}>1</button>
-                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 2 }}>2</button>
-                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 3 }}>3</button>
+                <button type="button" id="button1" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 1 }}>1</button>
+                <button type="button" id="button2" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 2 }}>2</button>
+                <button type="button" id="button3" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 3 }}>3</button>
               </div>
               <div className="btn-group">
-                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 4 }}>4</button>
-                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 5 }}>5</button>
-                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 6 }}>6</button>
+                <button type="button" id="button4" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 4 }}>4</button>
+                <button type="button" id="button5" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 5 }}>5</button>
+                <button type="button" id="button6" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 6 }}>6</button>
               </div>
               <div className="btn-group">
-                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 7 }}>7</button>
-                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 8 }}>8</button>
-                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 9 }}>9</button>
+                <button type="button" id="button7" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 7 }}>7</button>
+                <button type="button" id="button8" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 8 }}>8</button>
+                <button type="button" id="button9" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 9 }}>9</button>
               </div>
               <div className="btn-group">
-                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value.slice(0, -1) }}>&lt;</button>
-                <button type="button" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 0 }}>0</button>
-                <button type="button" className="btn btn-primary py-3" onClick={(evt) => postInputOnScreen(document.getElementById('code').value)}> Go</button>
+                <button type="button" id="buttonRemove" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value.slice(0, -1) }}>&lt;</button>
+                <button type="button" id="button0" className="btn btn-outline-secondary py-3" onClick={() => { document.getElementById('code').value = document.getElementById('code').value + 0 }}>0</button>
+                <button type="button" id="buttonGo" className="btn btn-primary py-3" onClick={(evt) => postInputOnScreen(document.getElementById('code').value)}> Go</button>
               </div>
             </div>
-
-
           </Col>
+
+          {/* Concentraion & Temperature Limit inputs */}
           <Col sm={3} className="custom-border">
             <div>
               <InputGroup size="sm">
@@ -417,46 +462,46 @@ function App() {
               </InputGroup>
               <br />
             </div>
+
+            {/* Celcius & Farenheit Radio Selections, default Celcius */}
             <div className="container">
               <div className="row mt-5">
                 <div className="col-sm-12">
-
                   <form>
+                    <Row>
+                      <Col className="form-check">
+                        <label>
+                          <input
+                            type="radio"
+                            name="react-tips"
+                            value="c"
+                            checked={currentTempScale === false}
+                            className="form-check-input"
+                            onChange={handleOptionChange}
+                          />
+                          Celcius
+                        </label>
+                      </Col>
 
-                    <div className="form-check">
-                      <label>
-                        <input
-                          type="radio"
-                          name="react-tips"
-                          value="c"
-                          checked={currentTempScale === false}
-                          className="form-check-input"
-                          onChange={handleOptionChange}
-                        />
-            Celcius
-          </label>
-                    </div>
-
-                    <div className="form-check">
-                      <label>
-                        <input
-                          type="radio"
-                          name="react-tips"
-                          value="f"
-                          className="form-check-input"
-                          checked={currentTempScale === true}
-                          onChange={handleOptionChange}
-
-                        />
-            Fahrenheit
-          </label>
-                    </div>
-
+                      <Col className="form-check">
+                        <label>
+                          <input
+                            type="radio"
+                            name="react-tips"
+                            value="f"
+                            className="form-check-input"
+                            checked={currentTempScale === true}
+                            onChange={handleOptionChange}
+                          />
+                          Fahrenheit
+                        </label>
+                      </Col>
+                    </Row>
                   </form>
-
                 </div>
               </div>
             </div>
+
           </Col>
         </Row>
 
